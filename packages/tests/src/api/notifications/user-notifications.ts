@@ -203,7 +203,7 @@ describe('Test user notifications', function () {
         privacy: VideoPrivacy.PUBLIC,
         targetUrl: FIXTURE_URLS.goodVideo
       }
-      const { video } = await servers[0].imports.importVideo({ attributes })
+      const { video } = await servers[0].videoImports.importVideo({ attributes })
 
       await waitJobs(servers)
 
@@ -274,7 +274,7 @@ describe('Test user notifications', function () {
         targetUrl: FIXTURE_URLS.goodVideo,
         waitTranscoding: true
       }
-      const { video } = await servers[1].imports.importVideo({ attributes })
+      const { video } = await servers[1].videoImports.importVideo({ attributes })
 
       await waitJobs(servers)
       await checkVideoIsPublished({ ...baseParams, videoName: name, shortUUID: video.shortUUID, checkType: 'presence' })
@@ -449,7 +449,7 @@ describe('Test user notifications', function () {
         privacy: VideoPrivacy.PRIVATE,
         targetUrl: FIXTURE_URLS.badVideo
       }
-      const { video: { shortUUID } } = await servers[0].imports.importVideo({ attributes })
+      const { video: { shortUUID } } = await servers[0].videoImports.importVideo({ attributes })
 
       await waitJobs(servers)
 
@@ -468,7 +468,7 @@ describe('Test user notifications', function () {
         privacy: VideoPrivacy.PRIVATE,
         targetUrl: FIXTURE_URLS.goodVideo
       }
-      const { video: { shortUUID } } = await servers[0].imports.importVideo({ attributes })
+      const { video: { shortUUID } } = await servers[0].videoImports.importVideo({ attributes })
 
       await waitJobs(servers)
 
