@@ -13,7 +13,7 @@ import {
   VideoPrivacy,
   VideoRateType,
   VideoState,
-  VideoStorage,
+  FileStorage,
   VideoStreamingPlaylistType,
   type VideoPrivacyType,
   type VideoStateType
@@ -1433,7 +1433,13 @@ export class VideoModel extends Model<Partial<AttributesOnly<VideoModel>>> {
     return queryBuilder.queryVideo({ url, transaction, type: 'thumbnails' })
   }
 
-  static loadByUrlAndPopulateAccount (url: string, transaction?: Transaction): Promise<MVideoAccountLightBlacklistAllFiles> {
+  static loadByUrlAndPopulateAccount (url: string, transaction?: Transaction): Promise<MVideoAccountLight> {
+    const queryBuilder = new VideoModelGetQueryBuilder(VideoModel.sequelize)
+
+    return queryBuilder.queryVideo({ url, transaction, type: 'account' })
+  }
+
+  static loadByUrlAndPopulateAccountAndFiles (url: string, transaction?: Transaction): Promise<MVideoAccountLightBlacklistAllFiles> {
     const queryBuilder = new VideoModelGetQueryBuilder(VideoModel.sequelize)
 
     return queryBuilder.queryVideo({ url, transaction, type: 'account-blacklist-files' })
@@ -1492,6 +1498,15 @@ export class VideoModel extends Model<Partial<AttributesOnly<VideoModel>>> {
       totalLocalVideoViews,
       totalVideos
     }
+  }
+
+  static loadByNameAndChannel (channel: MChannelId, name: string): Promise<MVideo> {
+    return VideoModel.unscoped().findOne({
+      where: {
+        name,
+        channelId: channel.id
+      }
+    })
   }
 
   static incrementViews (id: number, views: number) {
@@ -1921,7 +1936,7 @@ export class VideoModel extends Model<Partial<AttributesOnly<VideoModel>>> {
     const promises: Promise<any>[] = [ remove(filePath) ]
     if (!isRedundancy) promises.push(videoFile.removeTorrent())
 
-    if (videoFile.storage === VideoStorage.OBJECT_STORAGE) {
+    if (videoFile.storage === FileStorage.OBJECT_STORAGE) {
       promises.push(removeWebVideoObjectStorage(videoFile))
     }
 
@@ -1961,7 +1976,7 @@ export class VideoModel extends Model<Partial<AttributesOnly<VideoModel>>> {
         streamingPlaylistWithFiles.VideoFiles.map(file => file.removeTorrent())
       )
 
-      if (streamingPlaylist.storage === VideoStorage.OBJECT_STORAGE) {
+      if (streamingPlaylist.storage === FileStorage.OBJECT_STORAGE) {
         await removeHLSObjectStorage(streamingPlaylist.withVideo(this))
       }
     }
@@ -1975,7 +1990,7 @@ export class VideoModel extends Model<Partial<AttributesOnly<VideoModel>>> {
     const resolutionFilename = getHlsResolutionPlaylistFilename(videoFile.filename)
     await remove(VideoPathManager.Instance.getFSHLSOutputPath(this, resolutionFilename))
 
-    if (videoFile.storage === VideoStorage.OBJECT_STORAGE) {
+    if (videoFile.storage === FileStorage.OBJECT_STORAGE) {
       await removeHLSFileObjectStorageByFilename(streamingPlaylist.withVideo(this), videoFile.filename)
       await removeHLSFileObjectStorageByFilename(streamingPlaylist.withVideo(this), resolutionFilename)
     }
@@ -1985,7 +2000,7 @@ export class VideoModel extends Model<Partial<AttributesOnly<VideoModel>>> {
     const filePath = VideoPathManager.Instance.getFSHLSOutputPath(this, filename)
     await remove(filePath)
 
-    if (streamingPlaylist.storage === VideoStorage.OBJECT_STORAGE) {
+    if (streamingPlaylist.storage === FileStorage.OBJECT_STORAGE) {
       await removeHLSFileObjectStorageByFilename(streamingPlaylist.withVideo(this), filename)
     }
   }
